@@ -10,6 +10,7 @@ import camera3 from "../assets/images/camera3.jpg";
 import camera4 from "../assets/images/camera4.jpg";
 import taradodDays from "../assets/images/tradodDays.jpg";
 import tradodMonth from "../assets/images/tradodMonth.jpg";
+import CameraStream from "../components/CameraStream"
 
 const Home = () => {
   const [searchText, setSearchText] = useState("");
@@ -92,7 +93,8 @@ const Home = () => {
         <Col sm={6}>
           <div style={{ width: "100%" }} className="mine_card">
             <div className="mine_card_title">دوربین ورودی معدن</div>
-            <img src={camera1} alt="camera" />
+            {/* <img src={camera1} alt="camera" /> */}
+            <CameraStream />
           </div>
         </Col>
         <Col sm={6}>

@@ -1,5 +1,5 @@
 import { Row } from "antd";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Table, Input, Button, Col } from "antd";
 import { EyeOutlined } from "@ant-design/icons";
 
@@ -10,47 +10,42 @@ import camera3 from "../assets/images/camera3.jpg";
 import camera4 from "../assets/images/camera4.jpg";
 import taradodDays from "../assets/images/tradodDays.jpg";
 import tradodMonth from "../assets/images/tradodMonth.jpg";
-import CameraStream from "../components/CameraStream"
+import CameraStream from "../components/CameraStream";
+import CountChart from "./CountChart"
+import { controller } from "../assets/controller/controller";
+
 
 const Home = () => {
   const [searchText, setSearchText] = useState("");
   const [filteredData, setFilteredData] = useState([]);
 
-  const data = [
-    {
-      key: "1",
-      city: "همدان",
-      subscriberName: "معدن شماره 1",
-    },
-    {
-      key: "2",
-      city: "تبریز",
-      subscriberName: "معدن شماره 2",
-    },
-    {
-      key: "3",
-      city: "اصفهان",
-      subscriberName: "معدن شماره 3",
-    },
-  ];
+  const [data, setData] = useState([]);
 
   const handleSearch = () => {
-    const filtered = data.filter((item) =>
-      item.subscriberName.includes(searchText)
-    );
+    const filtered = data.filter((item) => item.mine_name.includes(searchText));
     setFilteredData(filtered);
   };
 
   const columns = [
     {
       title: "شهر",
-      dataIndex: "city",
-      key: "city",
+      dataIndex: "location",
+      key: "location",
+    },
+    {
+      title: "نام معدن",
+      dataIndex: "mine_name",
+      key: "mine_name",
     },
     {
       title: "نام مشترک",
-      dataIndex: "subscriberName",
-      key: "subscriberName",
+      dataIndex: "owner_name",
+      key: "owner_name",
+    },
+    {
+      title: "شماره تماس",
+      dataIndex: "contact_number",
+      key: "contact_number",
     },
     {
       title: "اقدامات",
@@ -60,6 +55,20 @@ const Home = () => {
       ),
     },
   ];
+
+  const [chartData, setChartData] = useState([]);
+
+  const fetchMineData = async () => {
+    const response = await controller.readMines();
+
+    setData(response.json.data);
+  };
+
+
+  useEffect(() => {
+    fetchMineData();
+
+  }, []);
 
   return (
     <>
@@ -89,11 +98,10 @@ const Home = () => {
       </Row>
       <br />
 
-      <Row style={{ width: "100%" }} gutter={10}>
+      {/* <Row style={{ width: "100%" }} gutter={10}>
         <Col sm={6}>
           <div style={{ width: "100%" }} className="mine_card">
             <div className="mine_card_title">دوربین ورودی معدن</div>
-            {/* <img src={camera1} alt="camera" /> */}
             <CameraStream />
           </div>
         </Col>
@@ -118,17 +126,12 @@ const Home = () => {
           </div>
           <img src={camera4} alt="camera" />
         </Col>
-      </Row>
-      <br />
+      </Row> */}
 
       <Row style={{ width: "100%" }} gutter={[10, 10]}>
         <div style={{ width: "100%" }} className="mine_card">
           <div className="mine_card_title">تعداد ترددها در روزهای اخیر</div>
-          <img
-            style={{ width: "100%", padding: "10px 30px 20px 30px" }}
-            src={taradodDays}
-            alt="taradodDays"
-          />
+          <CountChart />
         </div>
       </Row>
       <br />

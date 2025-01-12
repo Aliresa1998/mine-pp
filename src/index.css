@@ -24,6 +24,11 @@ div {
   direction: rtl !important;
 }
 
+text {
+  font-family: "iranSans", sans-serif !important;
+  direction: rtl !important;
+}
+
 span {
   font-family: "iranSans", sans-serif !important;
   direction: rtl !important;

@@ -1,193 +1,224 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Form,
   Input,
   Select,
   Radio,
   Button,
-  DatePicker,
   TimePicker,
   Row,
   Col,
   Table,
+  Pagination,
+  Modal,
 } from "antd";
-
+import { controller } from "../assets/controller/controller";
+import moment from "moment-jalaali";
+import ShowPlateSTR from "../components/ShowPlateSTR";
+import { EyeOutlined } from "@ant-design/icons";
+import config from "../assets/controller/config";
+import DatePicker from "react-multi-date-picker";
+import persian from "react-date-object/calendars/persian";
+import persian_fa from "react-date-object/locales/persian_fa";
 const { Option } = Select;
 
 const VehicleReportComponent = () => {
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [selectedPlate, setSelectedPlate] = useState(null);
+
+  const showModal = (record) => {
+    setSelectedPlate(record);
+    setIsModalVisible(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalVisible(false);
+    setSelectedPlate(null);
+  };
   const columns = [
     {
-      title: "ردیف",
-      dataIndex: "row",
-      key: "row",
+      title: "شناسه",
+      dataIndex: "id",
+      key: "id",
     },
     {
-      title: "نام راننده",
-      dataIndex: "driverName",
-      key: "driverName",
+      title: "نام معدن",
+      dataIndex: "mine_name",
+      key: "mine_name",
     },
     {
-      title: "خودرو",
-      dataIndex: "vehicle",
-      key: "vehicle",
+      title: "مجوز",
+      dataIndex: "permit",
+      key: "permit",
+      render: (permit) => (permit ? "بله" : "خیر"),
     },
     {
       title: "پلاک",
-      dataIndex: "plate",
-      key: "plate",
+      dataIndex: "predicted_string",
+      key: "predicted_string",
+      render: (predicted_string) => (
+        <div style={{ minWidth: "200px" }}>
+          <ShowPlateSTR plate={predicted_string} />
+        </div>
+      ),
     },
     {
-      title: "کد تردد",
-      dataIndex: "trafficCode",
-      key: "trafficCode",
+      title: "زمان شروع",
+      dataIndex: "starttime",
+      key: "starttime",
+      render: (starttime) => {
+        const parsedTime = moment(starttime, "YYYY-MM-DD-HH-mm-ss");
+        return parsedTime.isValid()
+          ? parsedTime.format("HH:mm:ss jYYYY/jMM/jDD")
+          : "تاریخ نامعتبر";
+      },
     },
     {
-      title: "ورودی/خروجی",
-      dataIndex: "entryExit",
-      key: "entryExit",
+      title: "زمان پایان",
+      dataIndex: "endtime",
+      key: "endtime",
+      render: (endtime) => {
+        if (!endtime) return "نامشخص";
+        const parsedTime = moment(endtime, "YYYY-MM-DD-HH-mm-ss");
+        return parsedTime.isValid()
+          ? parsedTime.format("HH:mm:ss jYYYY/jMM/jDD ")
+          : "تاریخ نامعتبر";
+      },
     },
     {
-      title: "ساعت",
-      dataIndex: "time",
-      key: "time",
+      title: "تصویر ",
+      dataIndex: "raw_image_path",
+      key: "raw_image_path",
+      render: (url) => (
+        <img width={300} src={config.apiGateway.URL + "/" + url} alt="car" />
+      ),
     },
     {
-      title: "تاریخ",
-      dataIndex: "date",
-      key: "date",
+      title: "تصویر پلاک ",
+      dataIndex: "cropped_plate_path",
+      key: "cropped_plate_path",
+      render: (url) => (
+        <img width={300} src={config.apiGateway.URL + "/" + url} alt="plate" />
+      ),
     },
     {
-      title: "آخرین وضعیت",
-      dataIndex: "lastStatus",
-      key: "lastStatus",
-    },
-    {
-      title: "عملیات",
-      dataIndex: "actions",
+      title: "اقدامات",
       key: "actions",
+      render: (_, record) =>
+        record.permit ? (
+          <Button
+            type="link"
+            icon={<EyeOutlined />}
+            onClick={() => showModal(record)}
+          >
+            مشاهده
+          </Button>
+        ) : null,
     },
   ];
 
-  const data = [];
+  const [data, setData] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalData, setTotalData] = useState(0);
+  const handleReadData = async () => {
+    const response = await controller.readPlates(currentPage);
+
+    setData(response.json.plates);
+    setTotalData(response.json.count);
+  };
+
+  const handleChagePage = (event) => {
+    setCurrentPage(event);
+  };
+
+  useEffect(() => {
+    handleReadData();
+  }, [currentPage]);
 
   return (
     <div style={{ width: "100%" }} className="mine_card">
       <div className="mine_card_title">مدیریت ترددها</div>
-
+      <DatePicker calendar={persian} locale={persian_fa} />
       <div style={{ width: "100%", padding: "15px" }}>
-        <Form layout="vertical" style={{ padding: "20px" }}>
-          <Row gutter={16}>
-            <Col span={8}>
-              <Form.Item label="نام">
-                <Input placeholder="نام" />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item label="نام خانوادگی">
-                <Input placeholder="نام خانوادگی" />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item label="نام گروه">
-                <Input placeholder="نام گروه" />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={8}>
-              <Form.Item label="شماره پلاک">
-                <Input addonBefore="99 ب 999" placeholder="ایران 99" />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item label="نام خودرو">
-                <Select placeholder="انتخاب خودرو">
-                  <Option value="car1">خودرو 1</Option>
-                  <Option value="car2">خودرو 2</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item label="وضعیت">
-                <Select placeholder="انتخاب وضعیت">
-                  <Option value="status1">وضعیت 1</Option>
-                  <Option value="status2">وضعیت 2</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={8}>
-              <Form.Item label="از تاریخ">
-                <DatePicker
-                  style={{ width: "100%" }}
-                  placeholder="انتخاب تاریخ"
-                />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item label="تا تاریخ">
-                <DatePicker
-                  style={{ width: "100%" }}
-                  placeholder="انتخاب تاریخ"
-                />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item label="از ساعت">
-                <TimePicker
-                  style={{ width: "100%" }}
-                  placeholder="انتخاب ساعت"
-                />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={8}>
-              <Form.Item label="تا ساعت">
-                <TimePicker
-                  style={{ width: "100%" }}
-                  placeholder="انتخاب ساعت"
-                />
-              </Form.Item>
-            </Col>
-            <Col span={16}>
-              <Form.Item label="بر اساس دسته بندی پلاک">
-                <Radio.Group defaultValue="all">
-                  <Radio value="all">نمایش تمامی خودروها</Radio>
-                  <Radio value="personal">خودروهای شخصی</Radio>
-                  <Radio value="public">خودروهای عمومی</Radio>
-                  <Radio value="govOrg">خودروهای دولتی / سازمانی</Radio>
-                  <Radio value="military">خودروهای نظامی</Radio>
-                </Radio.Group>
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={8}>
-              <Form.Item label="بر اساس بومی / غیر بومی">
-                <Radio.Group defaultValue="all">
-                  <Radio value="all">نمایش تمامی خودروها</Radio>
-                  <Radio value="localCity">فقط بومی شهر همدان</Radio>
-                  <Radio value="localState">فقط بومی استان همدان</Radio>
-                  <Radio value="nonLocal">فقط غیر بومی</Radio>
-                </Radio.Group>
-              </Form.Item>
-            </Col>
-          </Row>
-          <Button type="primary" style={{ marginRight: "10px" }}>
-            اعمال فیلتر
-          </Button>
-          <Button>چاپ گزارش</Button>
-          <Table
-            columns={columns}
-            dataSource={data}
-            pagination={{ pageSize: 10 }}
-            style={{ marginTop: "20px" }}
-            locale={{ emptyText: "هیچ داده‌ای در جدول وجود ندارد" }}
-          />
-        </Form>
+        <Table
+          columns={columns}
+          dataSource={data}
+          pagination={false}
+          style={{ marginTop: "20px" }}
+          locale={{ emptyText: "هیچ داده‌ای در جدول وجود ندارد" }}
+        />
+        <br />
+        <Pagination
+          current={currentPage}
+          total={totalData}
+          onChange={handleChagePage}
+        />
       </div>
+      <Modal
+        title="جزئیات پلاک"
+        visible={isModalVisible}
+        onCancel={handleCloseModal}
+        footer={[
+          <Button key="close" onClick={handleCloseModal}>
+            بستن
+          </Button>,
+        ]}
+      >
+        {selectedPlate && (
+          <div>
+            <Row
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <strong>شناسه:</strong>
+              <span>{selectedPlate.id}</span>
+            </Row>
+            <Row
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <strong>نام معدن:</strong>
+              <span>{selectedPlate.mine_name}</span>
+            </Row>
+            <Row
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <strong>نام مالک:</strong>
+              <span>{selectedPlate.owner_name}</span>
+            </Row>
+            <Row
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <strong>سازمان:</strong>
+              <span>{selectedPlate.organization}</span>
+            </Row>
+            <Row
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <strong>شماره تماس:</strong>
+              <span>{selectedPlate.contact_number}</span>
+            </Row>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };

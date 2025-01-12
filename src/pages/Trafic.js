@@ -1,40 +1,116 @@
 import React, { useEffect, useState } from "react";
 import {
-  Form,
-  Input,
-  Select,
-  Radio,
   Button,
-  TimePicker,
-  Row,
-  Col,
   Table,
   Pagination,
   Modal,
+  Spin,
+  Row,
+  Popconfirm,
+  Input,
+  Select,
+  Col,
 } from "antd";
+import {
+  EditOutlined,
+  DeleteOutlined,
+  FilterOutlined,
+} from "@ant-design/icons";
 import { controller } from "../assets/controller/controller";
 import moment from "moment-jalaali";
 import ShowPlateSTR from "../components/ShowPlateSTR";
-import { EyeOutlined } from "@ant-design/icons";
 import config from "../assets/controller/config";
 import DatePicker from "react-multi-date-picker";
 import persian from "react-date-object/calendars/persian";
 import persian_fa from "react-date-object/locales/persian_fa";
+import EditedPlate from "../components/EditedPlate";
+import { PopupMessage } from "../components/PopupMessage";
 const { Option } = Select;
 
 const VehicleReportComponent = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [selectedPlate, setSelectedPlate] = useState(null);
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedRecord, setSelectedRecord] = useState(null);
+  const [data, setData] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalData, setTotalData] = useState(0);
+  const [loadingEdit, setLoadingEdit] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [filter, setFilter] = useState({
+    mine_name: "",
+    permit: "",
+    predicted_string: "",
+    starttime: null,
+    endtime: null,
+  });
+  const [filterVisible, setFilterVisible] = useState(false);
+  const [newEditedPlate, setNewEditedPlate] = useState(null);
+  const handleDelete = async(record) => {
+    const response = await controller.removePlateTreffic(record)
+    if (response.status < 250) {
+      handleReadData();
+      PopupMessage.openNotification(
+        "bottom",
+        "حذف موفقیت آمیز",
+        "Successful"
+      );
+    } else {
+      PopupMessage.openNotification("bottom", "خطا در حذف اطلاعات", "Error");
+    }
+    console.log("Deleting record", record);
+    // Implement delete functionality here
+  };
 
-  const showModal = (record) => {
-    setSelectedPlate(record);
+  const handleImageClick = (url) => {
+    setSelectedImage(url);
     setIsModalVisible(true);
+  };
+
+  const handleEditClick = (record) => {
+    setSelectedRecord(record);
+    setIsEditModalVisible(true);
+    setNewEditedPlate(record.predicted_string);
   };
 
   const handleCloseModal = () => {
     setIsModalVisible(false);
-    setSelectedPlate(null);
+    setSelectedImage(null);
   };
+
+  const handleCloseEditModal = () => {
+    setIsEditModalVisible(false);
+    setSelectedRecord(null);
+    setNewEditedPlate(null);
+  };
+
+  const handleFilterChange = (key, value) => {
+    setFilter((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const applyFilters = () => {
+    console.log("Applying filters:", filter);
+    // Implement filter application logic here
+  };
+
+  const handleSubmitEdit = async (selectedRecord) => {
+    setLoadingEdit(true);
+    selectedRecord["predicted_string"] = newEditedPlate;
+    const response = await controller.editTerraficPlate(selectedRecord);
+    if (response.status < 250) {
+      handleReadData();
+      PopupMessage.openNotification(
+        "bottom",
+        "ویرایش موفقیت آمیز",
+        "Successful"
+      );
+    } else {
+      PopupMessage.openNotification("bottom", "خطا در ویرایش اطلاعات", "Error");
+    }
+    handleCloseEditModal();
+    setLoadingEdit(false);
+  };
+
   const columns = [
     {
       title: "شناسه",
@@ -90,7 +166,13 @@ const VehicleReportComponent = () => {
       dataIndex: "raw_image_path",
       key: "raw_image_path",
       render: (url) => (
-        <img width={300} src={config.apiGateway.URL + "/" + url} alt="car" />
+        <img
+          width={300}
+          src={config.apiGateway.URL + "/" + url}
+          alt="car"
+          onClick={() => handleImageClick(config.apiGateway.URL + "/" + url)}
+          style={{ cursor: "pointer" }}
+        />
       ),
     },
     {
@@ -98,37 +180,61 @@ const VehicleReportComponent = () => {
       dataIndex: "cropped_plate_path",
       key: "cropped_plate_path",
       render: (url) => (
-        <img width={300} src={config.apiGateway.URL + "/" + url} alt="plate" />
+        <img
+          width={300}
+          src={config.apiGateway.URL + "/" + url}
+          alt="plate"
+          onClick={() => handleImageClick(config.apiGateway.URL + "/" + url)}
+          style={{ cursor: "pointer" }}
+        />
       ),
     },
     {
       title: "اقدامات",
       key: "actions",
-      render: (_, record) =>
-        record.permit ? (
+      render: (_, record) => (
+        <div style={{ display: "flex", gap: "8px" }}>
           <Button
             type="link"
-            icon={<EyeOutlined />}
-            onClick={() => showModal(record)}
+            icon={<EditOutlined />}
+            onClick={() => handleEditClick(record)}
           >
-            مشاهده
+            ویرایش
           </Button>
-        ) : null,
+          <Popconfirm
+            title="آیا از حذف این مورد اطمینان دارید؟"
+            onConfirm={() => handleDelete(record)}
+            okText="بله"
+            cancelText="خیر"
+          >
+            <Button type="link" danger icon={<DeleteOutlined />}>
+              حذف
+            </Button>
+          </Popconfirm>
+        </div>
+      ),
     },
   ];
 
-  const [data, setData] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalData, setTotalData] = useState(0);
   const handleReadData = async () => {
-    const response = await controller.readPlates(currentPage);
-
-    setData(response.json.plates);
-    setTotalData(response.json.count);
+    setLoading(true);
+    try {
+      const response = await controller.readPlates(currentPage);
+      setData(response.json.plates);
+      setTotalData(response.json.count);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleChagePage = (event) => {
+  const handleChangePage = (event) => {
     setCurrentPage(event);
+  };
+
+  const handleUpdateCurrentPlate = (e) => {
+    setNewEditedPlate(e);
   };
 
   useEffect(() => {
@@ -138,84 +244,201 @@ const VehicleReportComponent = () => {
   return (
     <div style={{ width: "100%" }} className="mine_card">
       <div className="mine_card_title">مدیریت ترددها</div>
-      <DatePicker calendar={persian} locale={persian_fa} />
       <div style={{ width: "100%", padding: "15px" }}>
-        <Table
-          columns={columns}
-          dataSource={data}
-          pagination={false}
-          style={{ marginTop: "20px" }}
-          locale={{ emptyText: "هیچ داده‌ای در جدول وجود ندارد" }}
-        />
-        <br />
-        <Pagination
-          current={currentPage}
-          total={totalData}
-          onChange={handleChagePage}
-        />
+        <Button
+          type="primary"
+          icon={<FilterOutlined />}
+          onClick={() => setFilterVisible(!filterVisible)}
+          style={{ marginBottom: "15px" }}
+        >
+          فیلترها
+        </Button>
+        {filterVisible && (
+          <div>
+            <div style={{ marginBottom: "15px" }}>
+              <Input
+                placeholder="نام معدن"
+                value={filter.mine_name}
+                onChange={(e) =>
+                  handleFilterChange("mine_name", e.target.value)
+                }
+                style={{ marginBottom: "8px" }}
+              />
+              <Select
+                allowClear
+                placeholder="مجوز"
+                value={filter.permit ? filter.permit : null}
+                onChange={(value) => handleFilterChange("permit", value)}
+                style={{ width: "100%", marginBottom: "8px" }}
+              >
+                <Option value="بله">بله</Option>
+                <Option value="خیر">خیر</Option>
+              </Select>
+              <Input
+                placeholder="پلاک"
+                value={filter.predicted_string}
+                onChange={(e) =>
+                  handleFilterChange("predicted_string", e.target.value)
+                }
+                style={{ marginBottom: "8px" }}
+              />
+              <DatePicker
+                calendar={persian}
+                locale={persian_fa}
+                value={filter.starttime}
+                onChange={(date) => handleFilterChange("starttime", date)}
+                inputClass="antd-input"
+                placeholder="تاریخ شروع"
+                style={{ marginBottom: "8px" }}
+              />
+              <DatePicker
+                calendar={persian}
+                locale={persian_fa}
+                value={filter.endtime}
+                onChange={(date) => handleFilterChange("endtime", date)}
+                inputClass="antd-input"
+                placeholder="تاریخ پایان"
+                style={{ marginBottom: "8px", marginRight: "15px" }}
+              />
+            </div>
+            <Row justify={"end"}>
+              <Button type="primary" onClick={applyFilters}>
+                اعمال فیلتر
+              </Button>
+            </Row>
+          </div>
+        )}
+
+        {loading ? (
+          <Spin
+            size="large"
+            style={{ display: "block", textAlign: "center" }}
+          />
+        ) : (
+          <>
+            <Table
+              columns={columns}
+              dataSource={data}
+              pagination={false}
+              style={{ marginTop: "20px" }}
+              locale={{ emptyText: "هیچ داده‌ای در جدول وجود ندارد" }}
+            />
+            <br />
+            <Pagination
+              showSizeChanger={false}
+              current={currentPage}
+              total={totalData}
+              onChange={handleChangePage}
+            />
+          </>
+        )}
       </div>
       <Modal
-        title="جزئیات پلاک"
         visible={isModalVisible}
         onCancel={handleCloseModal}
+        footer={null}
+        centered
+      >
+        {selectedImage && (
+          <img src={selectedImage} alt="Large view" style={{ width: "100%" }} />
+        )}
+      </Modal>
+      <Modal
+        width={800}
+        visible={isEditModalVisible}
+        onCancel={handleCloseEditModal}
         footer={[
-          <Button key="close" onClick={handleCloseModal}>
-            بستن
+          <Button key="cancel" onClick={handleCloseEditModal}>
+            لغو
+          </Button>,
+          <Button
+            loading={loadingEdit}
+            key="save"
+            type="primary"
+            onClick={() => handleSubmitEdit(selectedRecord)}
+          >
+            ذخیره
           </Button>,
         ]}
+        centered
+        title="ویرایش اطلاعات"
       >
-        {selectedPlate && (
+        {selectedRecord && (
           <div>
-            <Row
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <strong>شناسه:</strong>
-              <span>{selectedPlate.id}</span>
+            <Row gutter={[10]} align={"bottom"}>
+              <Col span={"18"}>
+                <img
+                  style={{ width: "100%" }}
+                  src={
+                    config.apiGateway.URL + "/" + selectedRecord.raw_image_path
+                  }
+                  alt="car"
+                />
+              </Col>
+
+              <Col span={"6"}>
+                نام معدن :
+                <Input
+                  disabled
+                  placeholder="نام معدن"
+                  value={selectedRecord.mine_name}
+                  onChange={(e) =>
+                    setSelectedRecord({
+                      ...selectedRecord,
+                      mine_name: e.target.value,
+                    })
+                  }
+                  style={{ marginBottom: "8px" }}
+                />
+                <br />
+                مجوز :
+                <Select
+                  disabled
+                  placeholder="مجوز"
+                  value={selectedRecord.permit ? "بله" : "خیر"}
+                  onChange={(value) =>
+                    setSelectedRecord({
+                      ...selectedRecord,
+                      permit: value === "بله",
+                    })
+                  }
+                  style={{ width: "100%", marginBottom: "8px" }}
+                >
+                  <Option value="بله">بله</Option>
+                  <Option value="خیر">خیر</Option>
+                </Select>
+                <br />
+                <img
+                  style={{ width: "100%" }}
+                  src={
+                    config.apiGateway.URL +
+                    "/" +
+                    selectedRecord.cropped_plate_path
+                  }
+                  alt="car"
+                />
+              </Col>
             </Row>
-            <Row
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <strong>نام معدن:</strong>
-              <span>{selectedPlate.mine_name}</span>
+            <br />
+            <Row justify={"center"}>
+              <EditedPlate
+                plate={selectedRecord.predicted_string}
+                handleUpdateCurrentPlate={handleUpdateCurrentPlate}
+              />
             </Row>
-            <Row
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <strong>نام مالک:</strong>
-              <span>{selectedPlate.owner_name}</span>
-            </Row>
-            <Row
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <strong>سازمان:</strong>
-              <span>{selectedPlate.organization}</span>
-            </Row>
-            <Row
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <strong>شماره تماس:</strong>
-              <span>{selectedPlate.contact_number}</span>
-            </Row>
+
+            {/* <Input
+              placeholder="پلاک"
+              value={selectedRecord.predicted_string}
+              onChange={(e) =>
+                setSelectedRecord({
+                  ...selectedRecord,
+                  predicted_string: e.target.value,
+                })
+              }
+              style={{ marginBottom: "8px" }}
+            />
+            */}
           </div>
         )}
       </Modal>

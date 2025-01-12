@@ -88,6 +88,47 @@ const readVehicles = async () => {
   return res;
 };
 
+const removePlateTreffic = async (data) => {
+  const myHeaders = Object.assign(authHeader(), {
+    "Content-Type": "application/json",
+  });
+
+  const req = new Request(config.apiGateway.URL + "/plates/" + data.id, {
+    method: "DELETE",
+    headers: myHeaders,
+  });
+  const response = await fetch(req);
+  const json = await response.json();
+  const res = {
+    json: json,
+    status: response.status,
+    message: response.message,
+  };
+
+  return res;
+};
+
+const editTerraficPlate = async (data) => {
+  const myHeaders = Object.assign(authHeader(), {
+    "Content-Type": "application/json",
+  });
+
+  const req = new Request(config.apiGateway.URL + "/plates/" + data.id, {
+    body: JSON.stringify(data),
+    method: "PATCH",
+    headers: myHeaders,
+  });
+  const response = await fetch(req);
+  const json = await response.json();
+  const res = {
+    json: json,
+    status: response.status,
+    message: response.message,
+  };
+
+  return res;
+};
+
 const editCar = async (data) => {
   const myHeaders = Object.assign(authHeader(), {
     "Content-Type": "application/json",
@@ -160,4 +201,7 @@ export const controller = {
   editCar,
   deleteCar,
   readPlates,
+
+  editTerraficPlate,
+  removePlateTreffic,
 };

@@ -93,14 +93,14 @@ const SideBar = () => {
             </div>
           </NavLink>
           <hr />
-          <NavLink to="/pattern">
+          {/* <NavLink to="/pattern">
             <div
               className={slectedItem == "3" ? "slectedItem" : "unslectedItem"}
             >
               الگو و مجوزهای تردد
             </div>
           </NavLink>
-          <hr />
+          <hr /> */}
           <NavLink to="/groups">
             <div
               className={slectedItem == "4" ? "slectedItem" : "unslectedItem"}

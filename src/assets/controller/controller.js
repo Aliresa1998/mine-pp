@@ -1,12 +1,10 @@
 import config from "./config";
 
 function authHeader() {
-  let user = JSON.parse(localStorage.getItem("user"));
+  let user = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczNzEzNTQ4MCwianRpIjoiYTQ4NTIwODQtYjU2OC00OGY4LThjNjUtMWRlY2M1YzBmNTg1IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6ImFkbWluIiwibmJmIjoxNzM3MTM1NDgwLCJjc3JmIjoiZDM1NGJkYzctYTE1NC00YjRhLWJmYjctZjNhNzgyYTVhMDU5IiwiZXhwIjoxNzM3MzA4MjgwfQ.MgTD1t4057iDJROW4K3wmnzqQY62ayIfM6_34HKeFoI";
   if (user) {
-    if (user.key) {
-      return { Authorization: "Token  " + user.key };
-    } else {
-      return {};
+    if (user) {
+      return { Authorization: "Bearer  " + user };
     }
   } else {
     return {};
@@ -52,13 +50,37 @@ const readDailyTraffic = async (date1, date2) => {
   return res;
 };
 
-const readPlates = async (page) => {
+const readPlates = async (page, filter) => {
   const myHeaders = Object.assign(authHeader());
+  var filters = "";
 
-  const req = new Request(config.apiGateway.URL + "/plates?page=" + page, {
-    method: "GET",
-    headers: myHeaders,
-  });
+  if (filter.mine_name) {
+    filters += "&mine_name=" + filter.mine_name;
+  }
+
+  if (filter.permit) {
+    filters += "&permit=" + filter.permit;
+  }
+
+  if (filter.predicted_string) {
+    filters += "&predicted_string=" + filter.predicted_string;
+  }
+
+  if (filter.starttime) {
+    filters += "&starttime=" + filter.starttime;
+  }
+
+  if (filter.endtime) {
+    filters += "&endtime=" + filter.endtime;
+  }
+
+  const req = new Request(
+    config.apiGateway.URL + "/plates?page=" + page + filters,
+    {
+      method: "GET",
+      headers: myHeaders,
+    }
+  );
   const response = await fetch(req);
   const json = await response.json();
   const res = {
@@ -173,6 +195,28 @@ const addCar = async (data) => {
   return res;
 };
 
+const signIn = async (data) => {
+  const myHeaders = Object.assign({
+    "Content-Type": "application/json",
+  });
+
+
+  const req = new Request(config.apiGateway.URL + "/signin", {
+    body: JSON.stringify(data),
+    method: "POST",
+    headers: myHeaders,
+  });
+  const response = await fetch(req);
+  const json = await response.json();
+  const res = {
+    json: json,
+    status: response.status,
+    message: response.message,
+  };
+
+  return res;
+};
+
 const deleteCar = async (data) => {
   const myHeaders = Object.assign(authHeader(), {
     "Content-Type": "application/json",
@@ -204,4 +248,6 @@ export const controller = {
 
   editTerraficPlate,
   removePlateTreffic,
+
+  signIn
 };

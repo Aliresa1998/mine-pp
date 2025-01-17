@@ -7,10 +7,10 @@ function Main({ children }) {
   return (
     <>
       <Row>
-        <Col sm={5}>
+        <Col sm={window.location.href.includes("sign-in") ? 0 : 5}>
           <SideBar />
         </Col>
-        <Col sm={18}>
+        <Col sm={window.location.href.includes("sign-in") ? 23 : 18}>
           <div style={{ margin: "15px", width: "100%" }}>{children}</div>
         </Col>
       </Row>

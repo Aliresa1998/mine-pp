@@ -46,15 +46,11 @@ const VehicleReportComponent = () => {
   });
   const [filterVisible, setFilterVisible] = useState(false);
   const [newEditedPlate, setNewEditedPlate] = useState(null);
-  const handleDelete = async(record) => {
-    const response = await controller.removePlateTreffic(record)
+  const handleDelete = async (record) => {
+    const response = await controller.removePlateTreffic(record);
     if (response.status < 250) {
       handleReadData();
-      PopupMessage.openNotification(
-        "bottom",
-        "حذف موفقیت آمیز",
-        "Successful"
-      );
+      PopupMessage.openNotification("bottom", "حذف موفقیت آمیز", "Successful");
     } else {
       PopupMessage.openNotification("bottom", "خطا در حذف اطلاعات", "Error");
     }
@@ -219,7 +215,7 @@ const VehicleReportComponent = () => {
   const handleReadData = async () => {
     setLoading(true);
     try {
-      const response = await controller.readPlates(currentPage);
+      const response = await controller.readPlates(currentPage, filter);
       setData(response.json.plates);
       setTotalData(response.json.count);
     } catch (error) {
@@ -240,6 +236,10 @@ const VehicleReportComponent = () => {
   useEffect(() => {
     handleReadData();
   }, [currentPage]);
+
+  useEffect(() => {
+    handleReadData();
+  }, [filter]);
 
   return (
     <div style={{ width: "100%" }} className="mine_card">
@@ -271,8 +271,8 @@ const VehicleReportComponent = () => {
                 onChange={(value) => handleFilterChange("permit", value)}
                 style={{ width: "100%", marginBottom: "8px" }}
               >
-                <Option value="بله">بله</Option>
-                <Option value="خیر">خیر</Option>
+                <Option value={true}>بله</Option>
+                <Option value={false}>خیر</Option>
               </Select>
               <Input
                 placeholder="پلاک"

@@ -1,11 +1,18 @@
-import { Menu, Row } from "antd";
+import { Menu, message, Row } from "antd";
 import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { controller } from "../../assets/controller/controller";
 import logo from "../../assets/images/logo.png";
 import { PopupMessage } from "../PopupMessage";
 
-import { ScheduleOutlined, SettingOutlined, SolutionOutlined, LockOutlined, BookOutlined, ShoppingCartOutlined } from "@ant-design/icons"
+import {
+  ScheduleOutlined,
+  SettingOutlined,
+  SolutionOutlined,
+  LockOutlined,
+  BookOutlined,
+  ShoppingCartOutlined,
+} from "@ant-design/icons";
 function Sidenav({ color }) {
   const { pathname } = useLocation();
   const page = pathname.replace("/", "");
@@ -125,7 +132,10 @@ function Sidenav({ color }) {
       width="24"
       height="24"
     >
-      <path fill="currentColor" d="M17,9V6c0-3.313-2.687-6-6-6S5,2.687,5,6v3H4c-1.104,0-2,0.896-2,2v11c0,1.104,0.896,2,2,2h16c1.104,0,2-0.896,2-2V11c0-1.104-0.896-2-2-2H17z M7,6c0-2.206,1.794-4,4-4s4,1.794,4,4v3H7V6z" />
+      <path
+        fill="currentColor"
+        d="M17,9V6c0-3.313-2.687-6-6-6S5,2.687,5,6v3H4c-1.104,0-2,0.896-2,2v11c0,1.104,0.896,2,2,2h16c1.104,0,2-0.896,2-2V11c0-1.104-0.896-2-2-2H17z M7,6c0-2.206,1.794-4,4-4s4,1.794,4,4v3H7V6z"
+      />
     </svg>
   );
 
@@ -174,8 +184,6 @@ function Sidenav({ color }) {
       ></path>
     </svg>
   );
-
-
 
   const profile = [
     <svg
@@ -245,280 +253,321 @@ function Sidenav({ color }) {
   ];
 
   const handleClickLogout = async () => {
-
     try {
-      const response = await controller.Logout()
-      PopupMessage.openNotification(
-        "bottom",
-        "خروج موفقیت آمیز",
-        "Successful"
-      )
+      const response = await controller.Logout();
+      PopupMessage.openNotification("bottom", "خروج موفقیت آمیز", "Successful");
       localStorage.clear();
-
     } catch (e) {
-      PopupMessage.openNotification(
-        "bottom",
-        "خطا در برقراری ارتباط",
-        "Error"
-      )
+      PopupMessage.openNotification("bottom", "خطا در برقراری ارتباط", "Error");
     }
-  }
+  };
 
   const checkAdminUser = async () => {
-    const responseCheckUser = await controller.checkAdminUser();
+    try {
+      const responseCheckUser = await controller.checkAdminUser();
 
-    if (responseCheckUser.json.detail) {
-      setIsAdmin(true)
-      localStorage.setItem("isAdmin", "true")
-    } else {
-      setIsAdmin(false)
-      localStorage.setItem("isAdmin", "false")
+      if (responseCheckUser.json.detail) {
+        setIsAdmin(true);
+        localStorage.setItem("isAdmin", "true");
+      } else {
+        setIsAdmin(false);
+        localStorage.setItem("isAdmin", "false");
+      }
+    } catch (e) {
+      message.error("خطا در برقراری ارتباط با سرور");
     }
-  }
+  };
 
   useState(() => {
     checkAdminUser();
-  }, [])
+  }, []);
 
-  const checkToken = async (token) => {
-    const response = await controller.sendFCMtoken(token);
-  }
 
   return (
     <>
-    
-
       <Row type="flex" justify="center">
         <img src={logo} alt="" width={80} />
       </Row>
       <hr />
-      {
-        localStorage.getItem("isAdmin") == "true" ?
-          <Menu theme="light" mode="inline">
-
-            <Menu.Item key="1">
-              <NavLink to="/dashboard">
+      {localStorage.getItem("isAdmin") == "true" ? (
+        <Menu theme="light" mode="inline">
+          <Menu.Item key="1">
+            <NavLink to="/dashboard">
+              <span
+                className="icon"
+                style={{
+                  background: page === "dashboard" ? color : "",
+                }}
+              >
+                {dashboard}
+              </span>
+              <span style={{ marginRight: "8px" }} className="label">
+                داشبورد
+              </span>
+            </NavLink>
+          </Menu.Item>
+          <Menu.Item key="customer">
+            <NavLink to="/customer-management">
+              <span
+                className="icon"
+                style={{
+                  background: page === "customer-management" ? color : "",
+                }}
+              >
+                {customerIcon}
+              </span>
+              <span style={{ marginRight: "8px" }} className="label">
+                مشتریان
+              </span>
+            </NavLink>
+          </Menu.Item>
+          <Menu.Item key="2">
+            <NavLink to="/order-management">
+              <div
+                className="icon"
+                style={{
+                  background: page === "order-management" ? color : "",
+                  display: "flex",
+                  justifyContent: "center",
+                  paddingRight: "6px",
+                }}
+              >
+                <ScheduleOutlined
+                  style={{
+                    fontSize: "20px",
+                    color: page != "order-management" ? "#BFBFC0" : "#FFF",
+                  }}
+                />
+              </div>
+              <span style={{ marginRight: "8px" }} className="label">
+                سفارشات
+              </span>
+            </NavLink>
+          </Menu.Item>
+          <Menu.Item key="price">
+            <NavLink to="/price">
+              <span
+                className="icon"
+                style={{
+                  background: page === "price" ? color : "",
+                }}
+              >
                 <span
-                  className="icon"
                   style={{
-                    background: page === "dashboard" ? color : "",
+                    fontSize: "20px",
+                    color: page != "price" ? "#BFBFC0" : "#FFF",
                   }}
                 >
-                  {dashboard}
+                  $
                 </span>
-                <span style={{ marginRight: "8px" }} className="label">داشبورد</span>
-              </NavLink>
-            </Menu.Item>
-            <Menu.Item key="customer">
-              <NavLink to="/customer-management">
-                <span
-                  className="icon"
+              </span>
+              <span style={{ marginRight: "8px" }} className="label">
+                نرخ
+              </span>
+            </NavLink>
+          </Menu.Item>
+          <Menu.Item key="2">
+            <NavLink to="/report">
+              <div
+                className="icon"
+                style={{
+                  background: page === "report" ? color : "",
+                  display: "flex",
+                  justifyContent: "center",
+                  paddingRight: "6px",
+                }}
+              >
+                <SolutionOutlined
                   style={{
-                    background: page === "customer-management" ? color : "",
+                    fontSize: "20px",
+                    color: page != "customer-create-order" ? "#BFBFC0" : "#FFF",
                   }}
-                >
-                  {customerIcon}
-                </span>
-                <span style={{ marginRight: "8px" }} className="label">مشتریان</span>
-              </NavLink>
-            </Menu.Item>
-            <Menu.Item key="2">
-              <NavLink to="/order-management">
+                />
+              </div>
+              <span style={{ marginRight: "8px" }} className="label">
+                گزارشات
+              </span>
+            </NavLink>
+          </Menu.Item>
 
-                <div
-                  className="icon"
+          <Menu.Item key="setting">
+            <NavLink to="/setting">
+              <div
+                className="icon"
+                style={{
+                  background: page === "setting" ? color : "",
+                  display: "flex",
+                  justifyContent: "center",
+                  paddingRight: "6px",
+                }}
+              >
+                <SettingOutlined
                   style={{
-                    background: page === "order-management" ? color : "",
-                    display: "flex",
-                    justifyContent: "center",
-                    paddingRight: "6px"
+                    fontSize: "20px",
+                    color: page != "setting" ? "#BFBFC0" : "#FFF",
                   }}
-                >
+                />
+              </div>
 
-                  <ScheduleOutlined style={{ fontSize: "20px", color: page != "order-management" ? "#BFBFC0" : "#FFF" }} />
+              <span style={{ marginRight: "8px" }} className="label">
+                تنظیمات
+              </span>
+            </NavLink>
+          </Menu.Item>
 
-                </div>
-                <span style={{ marginRight: "8px" }} className="label">سفارشات</span>
-              </NavLink>
-            </Menu.Item>
-            <Menu.Item key="price">
-              <NavLink to="/price">
-                <span
-                  className="icon"
+          <Menu.Item key="3">
+            <NavLink to="/change-password">
+              <div
+                className="icon"
+                style={{
+                  background: page === "change-password" ? color : "",
+                  display: "flex",
+                  justifyContent: "center",
+                  paddingRight: "6px",
+                }}
+              >
+                <LockOutlined
                   style={{
-                    background: page === "price" ? color : "",
+                    fontSize: "20px",
+                    color: page != "customer-create-order" ? "#BFBFC0" : "#FFF",
                   }}
-                >
-                  <span style={{ fontSize: "20px", color: page != "price" ? "#BFBFC0" : "#FFF" }}>$</span>
-                </span>
-                <span style={{ marginRight: "8px" }} className="label">نرخ</span>
-              </NavLink>
-            </Menu.Item>
-            <Menu.Item key="2">
-              <NavLink to="/report">
-                <div
-                  className="icon"
+                />
+              </div>
+              <span style={{ marginRight: "8px" }} className="label">
+                تغییر رمز عبور
+              </span>
+            </NavLink>
+          </Menu.Item>
+
+          <Menu.Item key="5">
+            <NavLink to="/sign-in" onClick={handleClickLogout}>
+              <span
+                className="icon"
+                style={{
+                  background: page === "rtl" ? color : "",
+                }}
+              >
+                {exitIcon}
+              </span>
+              <span style={{ marginRight: "8px" }} className="label">
+                خروج
+              </span>
+            </NavLink>
+          </Menu.Item>
+        </Menu>
+      ) : (
+        <Menu theme="light" mode="inline">
+          <Menu.Item key="1">
+            <NavLink to="/customer-order-list">
+              <div
+                className="icon"
+                style={{
+                  background: page === "customer-order-list" ? color : "",
+                  display: "flex",
+                  justifyContent: "center",
+                  paddingRight: "6px",
+                }}
+              >
+                <BookOutlined
                   style={{
-                    background: page === "report" ? color : "",
-                    display: "flex",
-                    justifyContent: "center",
-                    paddingRight: "6px"
+                    fontSize: "20px",
+                    color: page != "customer-create-order" ? "#BFBFC0" : "#FFF",
                   }}
-                >
-
-                  <SolutionOutlined style={{ fontSize: "20px", color: page != "customer-create-order" ? "#BFBFC0" : "#FFF" }} />
-
-                </div>
-                <span style={{ marginRight: "8px" }} className="label">گزارشات</span>
-              </NavLink>
-            </Menu.Item>
-
-            <Menu.Item key="setting">
-              <NavLink to="/setting">
-                <div
-                  className="icon"
+                />
+              </div>
+              <span style={{ marginRight: "8px" }} className="label">
+                سفارشات
+              </span>
+            </NavLink>
+          </Menu.Item>
+          <Menu.Item key="2">
+            <NavLink to="/customer-create-order">
+              <div
+                className="icon"
+                style={{
+                  background: page === "customer-create-order" ? color : "",
+                  display: "flex",
+                  justifyContent: "center",
+                  paddingRight: "6px",
+                }}
+              >
+                <ShoppingCartOutlined
                   style={{
-                    background: page === "setting" ? color : "",
-                    display: "flex",
-                    justifyContent: "center",
-                    paddingRight: "6px"
+                    fontSize: "20px",
+                    color: page != "customer-create-order" ? "#BFBFC0" : "#FFF",
                   }}
-                >
+                />
+              </div>
 
-                  <SettingOutlined style={{ fontSize: "20px", color: page != "setting" ? "#BFBFC0" : "#FFF" }} />
-                </div>
-
-                <span style={{ marginRight: "8px" }} className="label">تنظیمات</span>
-              </NavLink>
-            </Menu.Item>
-
-            <Menu.Item key="3">
-              <NavLink to="/change-password">
-                <div
-                  className="icon"
+              <span style={{ marginRight: "8px" }} className="label">
+                ثبت سفارش
+              </span>
+            </NavLink>
+          </Menu.Item>
+          <Menu.Item key="2">
+            <NavLink to="/customer-report">
+              <div
+                className="icon"
+                style={{
+                  background: page === "customer-report" ? color : "",
+                  display: "flex",
+                  justifyContent: "center",
+                  paddingRight: "6px",
+                }}
+              >
+                <SolutionOutlined
                   style={{
-                    background: page === "change-password" ? color : "",
-                    display: "flex",
-                    justifyContent: "center",
-                    paddingRight: "6px"
+                    fontSize: "20px",
+                    color: page != "customer-create-order" ? "#BFBFC0" : "#FFF",
                   }}
-                >
-
-                  <LockOutlined style={{ fontSize: "20px", color: page != "customer-create-order" ? "#BFBFC0" : "#FFF" }} />
-
-                </div>
-                <span style={{ marginRight: "8px" }} className="label">تغییر رمز عبور</span>
-              </NavLink>
-            </Menu.Item>
-
-            <Menu.Item key="5">
-              <NavLink to="/sign-in" onClick={handleClickLogout}>
-                <span
-                  className="icon"
+                />
+              </div>
+              <span style={{ marginRight: "8px" }} className="label">
+                گزارشات
+              </span>
+            </NavLink>
+          </Menu.Item>
+          <Menu.Item key="3">
+            <NavLink to="/change-password">
+              <div
+                className="icon"
+                style={{
+                  background: page === "change-password" ? color : "",
+                  display: "flex",
+                  justifyContent: "center",
+                  paddingRight: "6px",
+                }}
+              >
+                <LockOutlined
                   style={{
-                    background: page === "rtl" ? color : "",
+                    fontSize: "20px",
+                    color: page != "customer-create-order" ? "#BFBFC0" : "#FFF",
                   }}
-                >
-                  {exitIcon}
-                </span>
-                <span style={{ marginRight: "8px" }} className="label">خروج</span>
-              </NavLink>
+                />
+              </div>
 
-            </Menu.Item>
-          </Menu>
-          :
-          <Menu theme="light" mode="inline">
-
-            <Menu.Item key="1">
-              <NavLink to="/customer-order-list">
-                <div
-                  className="icon"
-                  style={{
-                    background: page === "customer-order-list" ? color : "",
-                    display: "flex",
-                    justifyContent: "center",
-                    paddingRight: "6px"
-                  }}
-                >
-
-                  <BookOutlined style={{ fontSize: "20px", color: page != "customer-create-order" ? "#BFBFC0" : "#FFF" }} />
-
-                </div>
-                <span style={{ marginRight: "8px" }} className="label">سفارشات</span>
-              </NavLink>
-            </Menu.Item>
-            <Menu.Item key="2">
-              <NavLink to="/customer-create-order">
-                <div
-                  className="icon"
-                  style={{
-                    background: page === "customer-create-order" ? color : "",
-                    display: "flex",
-                    justifyContent: "center",
-                    paddingRight: "6px"
-                  }}
-                >
-
-                  <ShoppingCartOutlined style={{ fontSize: "20px", color: page != "customer-create-order" ? "#BFBFC0" : "#FFF" }} />
-
-                </div>
-
-                <span style={{ marginRight: "8px" }} className="label">ثبت سفارش</span>
-              </NavLink>
-            </Menu.Item>
-            <Menu.Item key="2">
-              <NavLink to="/customer-report">
-                <div
-                  className="icon"
-                  style={{
-                    background: page === "customer-report" ? color : "",
-                    display: "flex",
-                    justifyContent: "center",
-                    paddingRight: "6px"
-                  }}
-                >
-
-                  <SolutionOutlined style={{ fontSize: "20px", color: page != "customer-create-order" ? "#BFBFC0" : "#FFF" }} />
-
-                </div>
-                <span style={{ marginRight: "8px" }} className="label">گزارشات</span>
-              </NavLink>
-            </Menu.Item>
-            <Menu.Item key="3">
-              <NavLink to="/change-password">
-                <div
-                  className="icon"
-                  style={{
-                    background: page === "change-password" ? color : "",
-                    display: "flex",
-                    justifyContent: "center",
-                    paddingRight: "6px"
-                  }}
-                >
-
-                  <LockOutlined style={{ fontSize: "20px", color: page != "customer-create-order" ? "#BFBFC0" : "#FFF" }} />
-
-                </div>
-
-                <span style={{ marginRight: "8px" }} className="label">تغییر رمز عبور</span>
-              </NavLink>
-            </Menu.Item>
-            <Menu.Item key="5">
-              <NavLink to="/sign-in" onClick={handleClickLogout}>
-                <span
-                  className="icon"
-                  style={{
-                    background: page === "rtl" ? color : "",
-                  }}
-                >
-                  {exitIcon}
-                </span>
-                <span style={{ marginRight: "8px" }} className="label">خروج</span>
-              </NavLink>
-            </Menu.Item>
-          </Menu>
-      }
-
+              <span style={{ marginRight: "8px" }} className="label">
+                تغییر رمز عبور
+              </span>
+            </NavLink>
+          </Menu.Item>
+          <Menu.Item key="5">
+            <NavLink to="/sign-in" onClick={handleClickLogout}>
+              <span
+                className="icon"
+                style={{
+                  background: page === "rtl" ? color : "",
+                }}
+              >
+                {exitIcon}
+              </span>
+              <span style={{ marginRight: "8px" }} className="label">
+                خروج
+              </span>
+            </NavLink>
+          </Menu.Item>
+        </Menu>
+      )}
     </>
   );
 }

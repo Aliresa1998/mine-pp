@@ -45,6 +45,7 @@ const App = () => {
         <Main>
           <Switch>
             <Route exact path="/sign-in" component={SignIn} />
+            <PrivateRoute exact path="/" component={Home} />
             <PrivateRoute exact path="/dashboard" component={Home} />
             <PrivateRoute exact path="/persons-cars" component={PersonCars} />
             <PrivateRoute exact path="/pattern" component={Olgo} />

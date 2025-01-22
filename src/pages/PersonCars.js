@@ -125,8 +125,12 @@ const PersonCars = () => {
   const [selectedCar, setSelectedCar] = useState(null);
 
   const fetchData = async () => {
-    const response = await controller.readVehicles();
-    setDataSource(response.json.vehicles);
+    try {
+      const response = await controller.readVehicles();
+      setDataSource(response.json.vehicles);
+    } catch (e) {
+      message.error("خطا در برقراری ارتباط با سرور");
+    }
   };
 
   const handleAddCar = async () => {
@@ -143,6 +147,7 @@ const PersonCars = () => {
       }
     } catch (error) {
       console.error("Validation Failed:", error);
+      message.error("خطا در برقراری ارتباط با سرور");
     }
   };
 
@@ -160,6 +165,7 @@ const PersonCars = () => {
       }
     } catch (error) {
       console.error("Validation Failed:", error);
+      message.error("خطا در برقراری ارتباط با سرور");
     }
   };
 
@@ -173,7 +179,7 @@ const PersonCars = () => {
         message.error("خطا در حذف خودرو");
       }
     } catch (error) {
-      console.error("Delete Failed:", error);
+      message.error("خطا در برقراری ارتباط با سرور");
     }
   };
 

@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import Logo from "../../assets/images/unnamed.png";
-import { Col, Row } from "antd";
+import { Col, message, Row } from "antd";
 import moment from "moment-jalaali";
+import { controller } from "../../assets/controller/controller";
 
 moment.loadPersian({ dialect: "persian-modern", usePersianDigits: true });
 const SideBar = () => {
@@ -39,6 +40,16 @@ const SideBar = () => {
       setslectedItem("1");
     }
   }, [pathname]);
+
+  const handleExit = async () => {
+    try {
+      const response = await controller.logOut();
+      window.location.href = "/sign-in";
+      localStorage.clear();
+    } catch (e) {
+      message.error("خطا در برقراری ارتباط با سرور");
+    }
+  };
 
   return (
     <>
@@ -115,7 +126,6 @@ const SideBar = () => {
             >
               مدیریت تردد ها
             </div>
-           
           </NavLink>
           <hr />
           <div className={slectedItem == "6" ? "slectedItem" : "unslectedItem"}>
@@ -124,6 +134,10 @@ const SideBar = () => {
           <hr />
           <div className={slectedItem == "7" ? "slectedItem" : "unslectedItem"}>
             تماس و پشتیبانی
+          </div>
+          <hr />
+          <div className="unslectedItem" onClick={handleExit}>
+            خروج
           </div>
         </div>
       </Col>

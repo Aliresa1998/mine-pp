@@ -1,28 +1,14 @@
-import React from "react";
-import { Table, Button, Input, Pagination } from "antd";
-import { EditOutlined, DeleteOutlined, TeamOutlined } from "@ant-design/icons";
+import React, { useEffect, useState } from "react";
+import { Table, Button, Input, Modal, Form, message, Popconfirm } from "antd";
+import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { controller } from "../assets/controller/controller";
 
 const GroupManagement = () => {
-  const data = [
-    {
-      key: "1",
-      groupTitle: "تیم پشتیبانی",
-      parentGroup: " ",
-      members: " ",
-    },
-    {
-      key: "2",
-      groupTitle: "واحد بازرسی",
-      parentGroup: " ",
-      members: " ",
-    },
-    {
-      key: "3",
-      groupTitle: "واحد حراست سازمان",
-      parentGroup: " ",
-      members: " ",
-    },
-  ];
+  const [data, setData] = useState([]);
+  const [search, setSearch] = useState("");
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [groupName, setGroupName] = useState("");
+  const [editingRecord, setEditingRecord] = useState(null);
 
   const columns = [
     {
@@ -30,49 +16,135 @@ const GroupManagement = () => {
       dataIndex: "key",
       key: "key",
       width: "10%",
+      render: (_, record, index) => index + 1,
     },
     {
       title: "عنوان گروه",
-      dataIndex: "groupTitle",
-      key: "groupTitle",
-    },
-    {
-      title: "عنوان مجموعه بالادست",
-      dataIndex: "parentGroup",
-      key: "parentGroup",
+      dataIndex: "organization_name",
+      key: "organization_name",
     },
     {
       title: "نفرات",
       dataIndex: "members",
       key: "members",
-      render: () => <span>•</span>,
+      render: (_, record) => (
+        <span>
+          {record.members && record.members.length > 0
+            ? record.members.length
+            : "-"}
+        </span>
+      ),
     },
     {
       title: "عملیات",
       key: "actions",
       render: (_, record) => (
         <div>
+          <Popconfirm
+            title="آیا از حذف این گروه مطمئن هستید؟"
+            onConfirm={() => handleDelete(record.organization_id)}
+            okText="بله"
+            cancelText="خیر"
+          >
+            <Button
+              style={{ color: "red", border: "1px solid red" }}
+              type="danger"
+              icon={<DeleteOutlined style={{ color: "red" }} />}
+            >
+              حذف
+            </Button>
+          </Popconfirm>
+
           <Button
+            style={{ marginRight: "8px" }}
             type="primary"
-            icon={<TeamOutlined />}
-            style={{ marginRight: "8px" }}
+            icon={<EditOutlined />}
+            onClick={() => handleEdit(record)}
           >
-            مدیریت اعضا
-          </Button>
-          <Button
-            type="danger"
-            icon={<DeleteOutlined />}
-            style={{ marginRight: "8px" }}
-          >
-            حذف
-          </Button>
-          <Button type="default" icon={<EditOutlined />}>
             ویرایش
           </Button>
         </div>
       ),
     },
   ];
+
+  const handleDelete = async (id) => {
+    try {
+      const response = await controller.deleteItem(id);
+      if (response.status < 250) {
+        message.success("ارگان با موفقیت حذف شد");
+        fetchData();
+      }
+    } catch (e) {
+      message.error("خطا در برقراری ارتباط");
+    }
+  };
+
+  const fetchData = async () => {
+    const response = await controller.readOrgans(search);
+    if (response?.json?.organizations) {
+      setData(response.json.organizations);
+    }
+  };
+
+  const handleSearch = (e) => {
+    setSearch(e.target.value);
+  };
+
+  const showModal = () => {
+    setIsModalVisible(true);
+    setEditingRecord(null);
+    setGroupName("");
+  };
+
+  const handleCancel = () => {
+    setIsModalVisible(false);
+    setGroupName("");
+    setEditingRecord(null);
+  };
+
+  const handleOk = async () => {
+    if (!groupName.trim()) {
+      message.error("لطفاً نام گروه را وارد کنید.");
+      return;
+    }
+
+    try {
+      if (editingRecord) {
+        // Update existing record
+        const response = await controller.updateOrgan(editingRecord.organization_id, { organization_name: groupName });
+        if (response.status < 250) {
+          message.success(`گروه "${groupName}" با موفقیت ویرایش شد.`);
+        } else {
+          message.error("خطا در ویرایش گروه");
+        }
+      } else {
+        // Create new record
+        const response = await controller.createOrgan({ organization_name: groupName });
+        if (response.status < 250) {
+          message.success(`گروه "${groupName}" با موفقیت اضافه شد.`);
+        } else {
+          message.error("خطا در ایجاد گروه، اسامی گروه باید یکتا باشد");
+        }
+      }
+
+      setIsModalVisible(false);
+      setGroupName("");
+      fetchData();
+    } catch (e) {
+      message.error("خطا در ارتباط با سرور");
+    }
+  };
+
+  const handleEdit = (record) => {
+    setEditingRecord(record);
+    setGroupName(record.organization_name);
+    setIsModalVisible(true);
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   return (
     <div style={{ width: "100%" }} className="mine_card">
@@ -85,10 +157,16 @@ const GroupManagement = () => {
             justifyContent: "space-between",
           }}
         >
-          <Input placeholder="جستجو:" style={{ width: "200px" }} />
+          <Input
+            value={search}
+            placeholder="جستجو:"
+            style={{ width: "200px" }}
+            onChange={handleSearch}
+          />
           <Button
             type="primary"
             style={{ backgroundColor: "green", color: "white" }}
+            onClick={showModal}
           >
             افزودن گروه
           </Button>
@@ -100,16 +178,31 @@ const GroupManagement = () => {
           bordered
           style={{ backgroundColor: "white" }}
         />
-        <div style={{ marginTop: "16px", textAlign: "center" }}>
-          <Pagination
-            defaultCurrent={1}
-            total={3}
-            pageSize={10}
-            showSizeChanger={false}
-            simple
-          />
-        </div>
       </div>
+
+      <Modal
+        title={editingRecord ? "ویرایش گروه" : "افزودن گروه جدید"}
+        visible={isModalVisible}
+        onOk={handleOk}
+        onCancel={handleCancel}
+        okText="ثبت"
+        cancelText="لغو"
+      >
+        <Form>
+          <Form.Item
+            label="نام گروه"
+            rules={[
+              { required: true, message: "لطفاً نام گروه را وارد کنید." },
+            ]}
+          >
+            <Input
+              value={groupName}
+              placeholder="نام گروه را وارد کنید"
+              onChange={(e) => setGroupName(e.target.value)}
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 };

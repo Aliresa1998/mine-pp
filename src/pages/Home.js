@@ -59,7 +59,7 @@ const Home = () => {
   const [chartData, setChartData] = useState([]);
 
   const fetchMineData = async () => {
-    const response = await controller.readMines();
+    const response = await controller.readMines(searchText);
 
     setData(response.json.data);
   };
@@ -69,6 +69,11 @@ const Home = () => {
     fetchMineData();
 
   }, []);
+
+  useEffect(() => {
+    fetchMineData();
+
+  }, [searchText]);
 
   return (
     <>
@@ -84,9 +89,6 @@ const Home = () => {
                 onChange={(e) => setSearchText(e.target.value)}
                 style={{ width: "100%" }}
               />
-              <Button type="primary" onClick={handleSearch}>
-                جستجو
-              </Button>
             </div>
             <Table
               columns={columns}

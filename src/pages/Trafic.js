@@ -10,6 +10,7 @@ import {
   Input,
   Select,
   Col,
+  message,
 } from "antd";
 import {
   EditOutlined,
@@ -47,14 +48,23 @@ const VehicleReportComponent = () => {
   const [filterVisible, setFilterVisible] = useState(false);
   const [newEditedPlate, setNewEditedPlate] = useState(null);
   const handleDelete = async (record) => {
-    const response = await controller.removePlateTreffic(record);
-    if (response.status < 250) {
-      handleReadData();
-      PopupMessage.openNotification("bottom", "حذف موفقیت آمیز", "Successful");
-    } else {
-      PopupMessage.openNotification("bottom", "خطا در حذف اطلاعات", "Error");
+    try {
+      const response = await controller.removePlateTreffic(record);
+      if (response.status < 250) {
+        handleReadData();
+        PopupMessage.openNotification(
+          "bottom",
+          "حذف موفقیت آمیز",
+          "Successful"
+        );
+      } else {
+        PopupMessage.openNotification("bottom", "خطا در حذف اطلاعات", "Error");
+      }
+      console.log("Deleting record", record);
+    } catch (e) {
+      message.error("خطا در برقراری ارتباط با سرور");
     }
-    console.log("Deleting record", record);
+
     // Implement delete functionality here
   };
 
@@ -91,19 +101,28 @@ const VehicleReportComponent = () => {
 
   const handleSubmitEdit = async (selectedRecord) => {
     setLoadingEdit(true);
-    selectedRecord["predicted_string"] = newEditedPlate;
-    const response = await controller.editTerraficPlate(selectedRecord);
-    if (response.status < 250) {
-      handleReadData();
-      PopupMessage.openNotification(
-        "bottom",
-        "ویرایش موفقیت آمیز",
-        "Successful"
-      );
-    } else {
-      PopupMessage.openNotification("bottom", "خطا در ویرایش اطلاعات", "Error");
+    try {
+      selectedRecord["predicted_string"] = newEditedPlate;
+      const response = await controller.editTerraficPlate(selectedRecord);
+      if (response.status < 250) {
+        handleReadData();
+        PopupMessage.openNotification(
+          "bottom",
+          "ویرایش موفقیت آمیز",
+          "Successful"
+        );
+      } else {
+        PopupMessage.openNotification(
+          "bottom",
+          "خطا در ویرایش اطلاعات",
+          "Error"
+        );
+      }
+      handleCloseEditModal();
+    } catch (e) {
+      message.error("خطا در برقراری ارتباط با سرور");
     }
-    handleCloseEditModal();
+
     setLoadingEdit(false);
   };
 

@@ -1,7 +1,7 @@
 import config from "./config";
 
 function authHeader() {
-  let user = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTczNzEzNTQ4MCwianRpIjoiYTQ4NTIwODQtYjU2OC00OGY4LThjNjUtMWRlY2M1YzBmNTg1IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6ImFkbWluIiwibmJmIjoxNzM3MTM1NDgwLCJjc3JmIjoiZDM1NGJkYzctYTE1NC00YjRhLWJmYjctZjNhNzgyYTVhMDU5IiwiZXhwIjoxNzM3MzA4MjgwfQ.MgTD1t4057iDJROW4K3wmnzqQY62ayIfM6_34HKeFoI";
+  let user = localStorage.getItem("user");
   if (user) {
     if (user) {
       return { Authorization: "Bearer  " + user };
@@ -11,13 +11,16 @@ function authHeader() {
   }
 }
 
-const readMines = async () => {
+const readMines = async (searchText) => {
   const myHeaders = Object.assign(authHeader());
 
-  const req = new Request(config.apiGateway.URL + "/mine", {
-    method: "GET",
-    headers: myHeaders,
-  });
+  const req = new Request(
+    config.apiGateway.URL + `/mine${searchText ? "?search=" + searchText : ""}`,
+    {
+      method: "GET",
+      headers: myHeaders,
+    }
+  );
   const response = await fetch(req);
   const json = await response.json();
   const res = {
@@ -97,6 +100,48 @@ const readVehicles = async () => {
 
   const req = new Request(config.apiGateway.URL + "/vehicle?page=0", {
     method: "GET",
+    headers: myHeaders,
+  });
+  const response = await fetch(req);
+  const json = await response.json();
+  const res = {
+    json: json,
+    status: response.status,
+    message: response.message,
+  };
+
+  return res;
+};
+
+const readOrgans = async (search) => {
+  const myHeaders = Object.assign(authHeader());
+
+  
+  const req = new Request(
+    config.apiGateway.URL + `/organizations?page=0${search ? "&search=" + search : ""}`,
+    {
+      method: "GET",
+      headers: myHeaders,
+    }
+  );
+  const response = await fetch(req);
+  const json = await response.json();
+  const res = {
+    json: json,
+    status: response.status,
+    message: response.message,
+  };
+
+  return res;
+};
+
+const deleteItem = async (data) => {
+  const myHeaders = Object.assign(authHeader(), {
+    "Content-Type": "application/json",
+  });
+
+  const req = new Request(config.apiGateway.URL + "/organizations/" + data, {
+    method: "DELETE",
     headers: myHeaders,
   });
   const response = await fetch(req);
@@ -200,7 +245,6 @@ const signIn = async (data) => {
     "Content-Type": "application/json",
   });
 
-
   const req = new Request(config.apiGateway.URL + "/signin", {
     body: JSON.stringify(data),
     method: "POST",
@@ -222,8 +266,49 @@ const deleteCar = async (data) => {
     "Content-Type": "application/json",
   });
 
-  const req = new Request(config.apiGateway.URL + "/vehicle/?id=" + data, {
+  const req = new Request(config.apiGateway.URL + "/vehicle/" + data, {
     method: "DELETE",
+    headers: myHeaders,
+  });
+  const response = await fetch(req);
+  const json = await response.json();
+  const res = {
+    json: json,
+    status: response.status,
+    message: response.message,
+  };
+
+  return res;
+};
+
+const logOut = async () => {
+  const myHeaders = Object.assign(authHeader(), {
+    "Content-Type": "application/json",
+  });
+
+  const req = new Request(config.apiGateway.URL + "/signout", {
+    method: "POST",
+    headers: myHeaders,
+  });
+  const response = await fetch(req);
+  const json = await response.json();
+  const res = {
+    json: json,
+    status: response.status,
+    message: response.message,
+  };
+
+  return res;
+};
+
+const createOrgan = async (payload) => {
+  const myHeaders = Object.assign(authHeader(), {
+    "Content-Type": "application/json",
+  });
+
+  const req = new Request(config.apiGateway.URL + "/organizations", {
+    body: JSON.stringify(payload),
+    method: "POST",
     headers: myHeaders,
   });
   const response = await fetch(req);
@@ -249,5 +334,10 @@ export const controller = {
   editTerraficPlate,
   removePlateTreffic,
 
-  signIn
+  signIn,
+  logOut,
+
+  readOrgans,
+  createOrgan,
+  deleteItem
 };

@@ -20,19 +20,20 @@ const Login = () => {
 
     try {
       const response = await controller.signIn(payload);
-console.log(response)
+      console.log(response);
       if (response.status < 250) {
         // Simulate a successful login
-        localStorage.setItem(
-          "user",
-          "123"
-        );
-        notification.success({
-          message: "ورود موفق",
-          description: "شما با موفقیت وارد شدید",
-          placement: "topRight",
-        });
-        window.location.href = "/dashboard";
+        if (response.json.access_token) {
+          localStorage.setItem("user", response.json.access_token);
+          notification.success({
+            message: "ورود موفق",
+            description: "شما با موفقیت وارد شدید",
+            placement: "topRight",
+          });
+          window.location.href = "/dashboard";
+        } else {
+          message.error("نام کاربری یا رمز عبور اشتباه است", 3);
+        }
       } else {
         // Simulate an error
         message.error("نام کاربری یا رمز عبور اشتباه است", 3);

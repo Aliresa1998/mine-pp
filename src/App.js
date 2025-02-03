@@ -8,7 +8,8 @@ import Trafic from "./pages/Trafic";
 import Groups from "./pages/Groups";
 import Olgo from "./pages/Olgo";
 import NotFound from "./pages/NotFound";
-import SignIn from "./pages/SignIn"; // Assuming you have a SignIn component
+import SignIn from "./pages/SignIn"; 
+import Users from "./pages/Users";
 
 import "./App.css";
 import "antd/dist/reset.css";
@@ -51,6 +52,7 @@ const App = () => {
             <PrivateRoute exact path="/pattern" component={Olgo} />
             <PrivateRoute exact path="/groups" component={Groups} />
             <PrivateRoute exact path="/trafic" component={Trafic} />
+            <PrivateRoute exact path="/users" component={Users} />
             <Route path="*" component={NotFound} />
           </Switch>
         </Main>

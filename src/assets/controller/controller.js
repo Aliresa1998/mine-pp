@@ -11,6 +11,14 @@ function authHeader() {
   }
 }
 
+function checkStatus(status) {
+  // console.log(status);
+  if (status == 403) {
+    localStorage.clear();
+    window.location.href = "/";
+  }
+}
+
 const readMines = async (searchText) => {
   const myHeaders = Object.assign(authHeader());
 
@@ -23,6 +31,7 @@ const readMines = async (searchText) => {
   );
   const response = await fetch(req);
   const json = await response.json();
+  checkStatus(response.status);
   const res = {
     json: json,
     status: response.status,
@@ -70,11 +79,11 @@ const readPlates = async (page, filter) => {
   }
 
   if (filter.starttime) {
-    filters += "&starttime=" + filter.starttime;
+    filters += "&time1=" + filter.starttime;
   }
 
   if (filter.endtime) {
-    filters += "&endtime=" + filter.endtime;
+    filters += "&time2=" + filter.endtime;
   }
 
   const req = new Request(
@@ -113,17 +122,75 @@ const readVehicles = async () => {
   return res;
 };
 
+const readUsers = async (search) => {
+  const myHeaders = Object.assign(authHeader());
+
+  const req = new Request(config.apiGateway.URL + `/user`, {
+    method: "GET",
+    headers: myHeaders,
+  });
+  const response = await fetch(req);
+  const json = await response.json();
+  const res = {
+    json: json,
+    status: response.status,
+    message: response.message,
+  };
+
+  return res;
+};
+
 const readOrgans = async (search) => {
   const myHeaders = Object.assign(authHeader());
 
-  
   const req = new Request(
-    config.apiGateway.URL + `/organizations?page=0${search ? "&search=" + search : ""}`,
+    config.apiGateway.URL +
+      `/organizations?page=0${search ? "&search=" + search : ""}`,
     {
       method: "GET",
       headers: myHeaders,
     }
   );
+  const response = await fetch(req);
+  const json = await response.json();
+  const res = {
+    json: json,
+    status: response.status,
+    message: response.message,
+  };
+
+  return res;
+};
+
+const handleDeleteUser = async (data) => {
+  const myHeaders = Object.assign(authHeader(), {
+    "Content-Type": "application/json",
+  });
+
+  const req = new Request(config.apiGateway.URL + "/user/" + data, {
+    method: "DELETE",
+    headers: myHeaders,
+  });
+  const response = await fetch(req);
+  const json = await response.json();
+  const res = {
+    json: json,
+    status: response.status,
+    message: response.message,
+  };
+
+  return res;
+};
+
+const deleteMine = async (id) => {
+  const myHeaders = Object.assign(authHeader(), {
+    "Content-Type": "application/json",
+  });
+
+  const req = new Request(config.apiGateway.URL + "/mine/" + id, {
+    method: "DELETE",
+    headers: myHeaders,
+  });
   const response = await fetch(req);
   const json = await response.json();
   const res = {
@@ -196,15 +263,87 @@ const editTerraficPlate = async (data) => {
   return res;
 };
 
+const updateUser = async (data, prevUsername) => {
+  const myHeaders = Object.assign(authHeader(), {
+    "Content-Type": "application/json",
+  });
+  var payload = {
+    username: data.username,
+  };
+
+  if (data.password) {
+    payload["password"] = data.password;
+  }
+  const req = new Request(config.apiGateway.URL + "/user/" + prevUsername, {
+    body: JSON.stringify(payload),
+    method: "PATCH",
+    headers: myHeaders,
+  });
+  const response = await fetch(req);
+  const json = await response.json();
+  const res = {
+    json: json,
+    status: response.status,
+    message: response.message,
+  };
+
+  return res;
+};
+
 const editCar = async (data) => {
   const myHeaders = Object.assign(authHeader(), {
     "Content-Type": "application/json",
   });
   data["plate_id"] = data["license_plate"];
 
-  const req = new Request(config.apiGateway.URL + "/vehicle", {
+  const req = new Request(
+    config.apiGateway.URL + "/vehicle/" + data.vehicle_id,
+    {
+      body: JSON.stringify(data),
+      method: "PATCH",
+      headers: myHeaders,
+    }
+  );
+  const response = await fetch(req);
+  const json = await response.json();
+  const res = {
+    json: json,
+    status: response.status,
+    message: response.message,
+  };
+
+  return res;
+};
+
+const updateMine = async (id, data) => {
+  const myHeaders = Object.assign(authHeader(), {
+    "Content-Type": "application/json",
+  });
+
+  const req = new Request(config.apiGateway.URL + "/mine/" + id, {
     body: JSON.stringify(data),
-    method: "PATCH",
+    method: "POST",
+    headers: myHeaders,
+  });
+  const response = await fetch(req);
+  const json = await response.json();
+  const res = {
+    json: json,
+    status: response.status,
+    message: response.message,
+  };
+
+  return res;
+};
+
+const createMine = async (data) => {
+  const myHeaders = Object.assign(authHeader(), {
+    "Content-Type": "application/json",
+  });
+
+  const req = new Request(config.apiGateway.URL + "/mine", {
+    body: JSON.stringify(data),
+    method: "POST",
     headers: myHeaders,
   });
   const response = await fetch(req);
@@ -225,6 +364,27 @@ const addCar = async (data) => {
   data["plate_id"] = data["license_plate"];
 
   const req = new Request(config.apiGateway.URL + "/vehicle", {
+    body: JSON.stringify(data),
+    method: "POST",
+    headers: myHeaders,
+  });
+  const response = await fetch(req);
+  const json = await response.json();
+  const res = {
+    json: json,
+    status: response.status,
+    message: response.message,
+  };
+
+  return res;
+};
+
+const signUp = async (data) => {
+  const myHeaders = Object.assign(authHeader(), {
+    "Content-Type": "application/json",
+  });
+
+  const req = new Request(config.apiGateway.URL + "/signup", {
     body: JSON.stringify(data),
     method: "POST",
     headers: myHeaders,
@@ -322,6 +482,30 @@ const createOrgan = async (payload) => {
   return res;
 };
 
+const updateOrgan = async (payload) => {
+  const myHeaders = Object.assign(authHeader(), {
+    "Content-Type": "application/json",
+  });
+
+  const req = new Request(
+    config.apiGateway.URL + `/organizations/${payload.organization_id}`,
+    {
+      body: JSON.stringify(payload),
+      method: "PATCH",
+      headers: myHeaders,
+    }
+  );
+  const response = await fetch(req);
+  const json = await response.json();
+  const res = {
+    json: json,
+    status: response.status,
+    message: response.message,
+  };
+
+  return res;
+};
+
 export const controller = {
   readMines,
   readDailyTraffic,
@@ -339,5 +523,15 @@ export const controller = {
 
   readOrgans,
   createOrgan,
-  deleteItem
+  deleteItem,
+  updateOrgan,
+
+  readUsers,
+  signUp,
+  handleDeleteUser,
+  updateUser,
+
+  deleteMine,
+  createMine,
+  updateMine,
 };

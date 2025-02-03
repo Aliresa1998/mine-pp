@@ -13,7 +13,7 @@ import {
 import React, { useEffect, useState } from "react";
 import { controller } from "../assets/controller/controller";
 import ShowPlateSTR from "../components/ShowPlateSTR";
-
+import moment from "moment-jalaali";
 const { Option } = Select;
 
 const LicensePlateInput = ({ value = "", onChange }) => {
@@ -123,8 +123,18 @@ const PersonCars = () => {
   const [editForm] = Form.useForm();
   const [dataSource, setDataSource] = useState([]);
   const [selectedCar, setSelectedCar] = useState(null);
+  const [mines, setMines] = useState([]);
 
   const fetchData = async () => {
+    // read mines
+    try {
+      const res = await controller.readMines();
+      console.log(res.json.data);
+      setMines(res.json.data);
+    } catch (e) {
+      console.log(e);
+    }
+
     try {
       const response = await controller.readVehicles();
       setDataSource(response.json.vehicles);
@@ -136,6 +146,9 @@ const PersonCars = () => {
   const handleAddCar = async () => {
     try {
       const values = await form.validateFields();
+      values['start_date'] = '2025-01-01'
+      values['end_date'] = '2026-01-01'
+      values['mine_id'] =  values['mine_id'] + ''
       const response = await controller.addCar(values);
       if (response.status < 250) {
         fetchData();
@@ -208,12 +221,44 @@ const PersonCars = () => {
       title: "پلاک",
       dataIndex: "license_plate",
       key: "license_plate",
-      render: (license_plate) => <ShowPlateSTR plate={license_plate} />,
+      render: (license_plate) => (
+        <>
+          <div style={{ minWidth: "120px" }}>
+            <ShowPlateSTR plate={license_plate} />
+          </div>
+        </>
+      ),
     },
     {
       title: "سازمان",
-      dataIndex: "organization",
-      key: "organization",
+      dataIndex: "organization_name",
+      key: "organization_name",
+    },
+    {
+      title: "تاریخ شروع مجوز",
+      dataIndex: "start_date",
+      key: "start_date",
+      render: (start_date) => (
+        <>{moment(start_date, "YYYY-MM-DD").format("jYYYY/jMM/jDD")}</>
+      ),
+    },
+    {
+      title: "تاریخ پایان مجوز",
+      dataIndex: "end_date",
+      key: "end_date",
+      render: (end_date) => (
+        <>{moment(end_date, "YYYY-MM-DD").format("jYYYY/jMM/jDD")}</>
+      ),
+    },
+    {
+      title: "وضعیت مجوز",
+      dataIndex: "start_date",
+      key: "start_date",
+      render: (end_date) => (
+        <>
+          <div style={{ color: "green" }}>فعال</div>
+        </>
+      ),
     },
     {
       title: "عملیات",
@@ -245,6 +290,18 @@ const PersonCars = () => {
       ),
     },
   ];
+
+  const [organLists, setOrganLists] = useState([]);
+
+  const readOrganLists = async () => {
+    const response = await controller.readOrgans();
+    console.log(response.json.organizations);
+    setOrganLists(response.json.organizations);
+  };
+
+  useEffect(() => {
+    readOrganLists();
+  }, []);
 
   return (
     <>
@@ -297,11 +354,40 @@ const PersonCars = () => {
             <LicensePlateInput />
           </Form.Item>
           <Form.Item
-            name="organization"
+            name="organization_id"
             label="سازمان"
             rules={[{ required: true, message: "این فیلد اجباری است" }]}
           >
-            <Input />
+            <Select placeholder="انتخاب سازمان">
+              {organLists &&
+                organLists.length > 0 &&
+                organLists.map((org) => (
+                  <Select.Option
+                    key={org.organization_id}
+                    value={org.organization_id}
+                  >
+                    {org.organization_name}
+                  </Select.Option>
+                ))}
+            </Select>
+          </Form.Item>
+          <Form.Item
+            name="mine_id"
+            label="معدن"
+            rules={[{ required: true, message: "این فیلد اجباری است" }]}
+          >
+            <Select placeholder="انتخاب معدن">
+              {mines &&
+                mines.length > 0 &&
+                mines.map((org) => (
+                  <Select.Option
+                    key={org.mine_id}
+                    value={org.mine_id}
+                  >
+                    {org.mine_name}
+                  </Select.Option>
+                ))}
+            </Select>
           </Form.Item>
         </Form>
       </Modal>
@@ -336,11 +422,22 @@ const PersonCars = () => {
             <LicensePlateInput />
           </Form.Item>
           <Form.Item
-            name="organization"
+            name="organization_id"
             label="سازمان"
             rules={[{ required: true, message: "این فیلد اجباری است" }]}
           >
-            <Input />
+            <Select placeholder="انتخاب سازمان">
+              {organLists &&
+                organLists.length > 0 &&
+                organLists.map((org) => (
+                  <Select.Option
+                    key={org.organization_id}
+                    value={org.organization_id}
+                  >
+                    {org.organization_name}
+                  </Select.Option>
+                ))}
+            </Select>
           </Form.Item>
         </Form>
       </Modal>

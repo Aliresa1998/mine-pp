@@ -4,6 +4,7 @@ import Logo from "../../assets/images/unnamed.png";
 import { Col, message, Row } from "antd";
 import moment from "moment-jalaali";
 import { controller } from "../../assets/controller/controller";
+import { UserOutlined, CarOutlined, GroupOutlined, DashboardOutlined, LogoutOutlined } from "@ant-design/icons";
 
 moment.loadPersian({ dialect: "persian-modern", usePersianDigits: true });
 const SideBar = () => {
@@ -36,6 +37,8 @@ const SideBar = () => {
       setslectedItem("4");
     } else if (pathname == "/trafic") {
       setslectedItem("5");
+    } else if (pathname == "/users") {
+      setslectedItem("6");
     } else {
       setslectedItem("1");
     }
@@ -81,62 +84,54 @@ const SideBar = () => {
           <br />
           <br />
         </div>
-
-        <div
-          className="sideNavBar"
-          onClick={() => {
-            setslectedItem("1");
-          }}
-        >
+        <div className="sideNavBar">
           <NavLink to="/dashboard">
             <div
-              className={slectedItem == "1" ? "slectedItem" : "unslectedItem"}
+              className={slectedItem === "1" ? "slectedItem" : "unslectedItem"}
             >
+              <DashboardOutlined style={{ marginLeft: 8 }} />
               جستجو و مانیتورینگ معادن
             </div>
           </NavLink>
           <hr />
           <NavLink to="/persons-cars">
             <div
-              className={slectedItem == "2" ? "slectedItem" : "unslectedItem"}
+              className={slectedItem === "2" ? "slectedItem" : "unslectedItem"}
             >
+              <CarOutlined style={{ marginLeft: 8 }} />
               افراد و خودروها
             </div>
           </NavLink>
           <hr />
-          {/* <NavLink to="/pattern">
-            <div
-              className={slectedItem == "3" ? "slectedItem" : "unslectedItem"}
-            >
-              الگو و مجوزهای تردد
-            </div>
-          </NavLink>
-          <hr /> */}
           <NavLink to="/groups">
             <div
-              className={slectedItem == "4" ? "slectedItem" : "unslectedItem"}
+              className={slectedItem === "4" ? "slectedItem" : "unslectedItem"}
             >
+              <GroupOutlined style={{ marginLeft: 8 }} />
               گروه ها و سازمان ها
             </div>
           </NavLink>
           <hr />
           <NavLink to="/trafic">
             <div
-              className={slectedItem == "5" ? "slectedItem" : "unslectedItem"}
+              className={slectedItem === "5" ? "slectedItem" : "unslectedItem"}
             >
+              <DashboardOutlined style={{ marginLeft: 8 }} />
               مدیریت تردد ها
             </div>
           </NavLink>
           <hr />
-          <div className={slectedItem == "6" ? "slectedItem" : "unslectedItem"}>
-            تنظیمات
-          </div>
-          <hr />
-          <div className={slectedItem == "7" ? "slectedItem" : "unslectedItem"}>
-            تماس و پشتیبانی
-          </div>
+          <NavLink to="/users">
+            <div
+              className={slectedItem === "6" ? "slectedItem" : "unslectedItem"}
+            >
+              <UserOutlined style={{ marginLeft: 8 }} />
+              مدیریت کاربران
+            </div>
+          </NavLink>
           <hr />
           <div className="unslectedItem" onClick={handleExit}>
+            <LogoutOutlined style={{ marginLeft: 8 }} />
             خروج
           </div>
         </div>

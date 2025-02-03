@@ -304,8 +304,20 @@ const VehicleReportComponent = () => {
               <DatePicker
                 calendar={persian}
                 locale={persian_fa}
-                value={filter.starttime}
-                onChange={(date) => handleFilterChange("starttime", date)}
+                //value={filter.starttime}
+                onChange={(date) => {
+                  if (date) {
+                    // Convert Persian date to Gregorian Date object
+                    const gregorianDate = date.toDate();
+                    // Format to YYYY-MM-DD
+                    const formattedDate = gregorianDate
+                      .toISOString()
+                      .split("T")[0];
+                    handleFilterChange("starttime", formattedDate);
+                  } else {
+                    handleFilterChange("starttime", null);
+                  }
+                }}
                 inputClass="antd-input"
                 placeholder="تاریخ شروع"
                 style={{ marginBottom: "8px" }}
@@ -313,12 +325,33 @@ const VehicleReportComponent = () => {
               <DatePicker
                 calendar={persian}
                 locale={persian_fa}
+                //value={filter.starttime}
+                onChange={(date) => {
+                  if (date) {
+                    // Convert Persian date to Gregorian Date object
+                    const gregorianDate = date.toDate();
+                    // Format to YYYY-MM-DD
+                    const formattedDate = gregorianDate
+                      .toISOString()
+                      .split("T")[0];
+                    handleFilterChange("endtime", formattedDate);
+                  } else {
+                    handleFilterChange("endtime", null);
+                  }
+                }}
+                inputClass="antd-input"
+                placeholder="تاریخ پایان"
+                style={{ marginBottom: "8px", marginRight: "15px" }}
+              />
+              {/* <DatePicker
+                calendar={persian}
+                locale={persian_fa}
                 value={filter.endtime}
                 onChange={(date) => handleFilterChange("endtime", date)}
                 inputClass="antd-input"
                 placeholder="تاریخ پایان"
                 style={{ marginBottom: "8px", marginRight: "15px" }}
-              />
+              /> */}
             </div>
             <Row justify={"end"}>
               <Button type="primary" onClick={applyFilters}>

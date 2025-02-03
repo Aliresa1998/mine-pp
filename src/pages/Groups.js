@@ -90,6 +90,10 @@ const GroupManagement = () => {
   const handleSearch = (e) => {
     setSearch(e.target.value);
   };
+  
+  useEffect(()=>{
+    fetchData()
+  },[search])
 
   const showModal = () => {
     setIsModalVisible(true);
@@ -112,7 +116,11 @@ const GroupManagement = () => {
     try {
       if (editingRecord) {
         // Update existing record
-        const response = await controller.updateOrgan(editingRecord.organization_id, { organization_name: groupName });
+        const myPayload = {
+          organization_id: editingRecord.organization_id,
+          organization_name: groupName,
+        };
+        const response = await controller.updateOrgan(myPayload);
         if (response.status < 250) {
           message.success(`گروه "${groupName}" با موفقیت ویرایش شد.`);
         } else {
@@ -120,7 +128,9 @@ const GroupManagement = () => {
         }
       } else {
         // Create new record
-        const response = await controller.createOrgan({ organization_name: groupName });
+        const response = await controller.createOrgan({
+          organization_name: groupName,
+        });
         if (response.status < 250) {
           message.success(`گروه "${groupName}" با موفقیت اضافه شد.`);
         } else {
